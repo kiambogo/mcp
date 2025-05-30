@@ -1,0 +1,37 @@
+{
+  "name": "zoom-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Zoom API integration - read-only access for searching and reading AI Companion meeting summaries",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "zoom-mcp-server": "build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "build/**/*"
+  ],
+  "keywords": [
+    "mcp",
+    "zoom",
+    "api",
+    "model-context-protocol",
+    "meeting-summaries",
+    "ai-companion",
+    "search",
+    "read-only"
+  ],
+  "author": "Christopher Poenaru",
+  "license": "MIT"
+} 

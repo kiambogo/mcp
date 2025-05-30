@@ -1,7 +1,7 @@
 # MCP Repository Makefile
 # Build and manage multiple MCP servers
 
-.PHONY: help all build-all build-jira build-confluence build-slack check-deps
+.PHONY: help all build-all build-jira build-confluence build-slack build-zoom check-deps
 
 # Default target
 help:
@@ -11,10 +11,11 @@ help:
 	@echo "  build-jira        - Build Jira MCP only"
 	@echo "  build-confluence  - Build Confluence MCP only"
 	@echo "  build-slack       - Build Slack MCP only"
+	@echo "  build-zoom        - Build Zoom MCP only"
 	@echo "  check-deps        - Check if required tools are installed"
 
 # Build all components
-all: build-jira build-confluence build-slack
+all: build-jira build-confluence build-slack build-zoom
 
 build-jira:
 	@echo "Building Jira MCP..."
@@ -33,6 +34,12 @@ build-slack:
 	@cd slack && rm -rf build/
 	@cd slack && npm run build > /dev/null
 	@echo "✅ Slack MCP built successfully"
+
+build-zoom:
+	@echo "Building Zoom MCP..."
+	@cd zoom && rm -rf build/
+	@cd zoom && npm run build > /dev/null
+	@echo "✅ Zoom MCP built successfully"
 
 # Utility targets
 check-deps:
