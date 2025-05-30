@@ -101,7 +101,7 @@ class JiraMCPServer {
           },
           {
             name: "jira_get_issue",
-            description: "Get detailed information about a specific Jira issue",
+            description: "Get detailed information about a specific Jira issue. A Jira issue will be provided (e.g., 'PROJ-123')",
             inputSchema: {
               type: "object",
               properties: {
@@ -115,7 +115,7 @@ class JiraMCPServer {
           },
           {
             name: "jira_create_issue",
-            description: "Create a new Jira issue",
+            description: "Create a new Jira issue with all required fields including story points estimation.",
             inputSchema: {
               type: "object",
               properties: {
@@ -133,22 +133,26 @@ class JiraMCPServer {
                 },
                 description: {
                   type: "string",
-                  description: "Detailed description of the issue",
+                  description: "Detailed description of the issue (required)",
+                },
+                story_points: {
+                  type: "number",
+                  description: "Story points using fibonacci numbers (1, 2, 3, 5, 8, 13, 21) representing engineering days of effort",
+                },
+                labels: {
+                  type: "string",
+                  description: "Comma-separated list of labels (required)",
                 },
                 assignee: {
                   type: "string",
-                  description: "Username or email of the assignee (optional)",
+                  description: "Username or email of the assignee (optional, can be unassigned)",
                 },
                 priority: {
                   type: "string",
                   description: "Priority level (e.g., 'High', 'Medium', 'Low')",
                 },
-                labels: {
-                  type: "string",
-                  description: "Comma-separated list of labels",
-                },
               },
-              required: ["project", "issue_type", "summary"],
+              required: ["project", "issue_type", "summary", "description", "story_points", "labels"],
             },
           },
           {
@@ -281,29 +285,41 @@ class JiraMCPServer {
           }
 
           case "jira_create_issue": {
-            const { project, issue_type, summary, description, assignee, priority, labels } = args as {
+            const { project, issue_type, summary, description, story_points, labels, assignee, priority } = args as {
               project: string;
               issue_type: string;
               summary: string;
-              description?: string;
+              description: string;
+              story_points: number;
+              labels: string;
               assignee?: string;
               priority?: string;
-              labels?: string;
             };
 
-            // Use correct command: issue create with proper flags
-            let command = `issue create --project "${project}" --type "${issue_type}" --summary "${summary}" --no-input`;
+            // Validate story points are fibonacci numbers
+            const fibonacciNumbers = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
+            if (!fibonacciNumbers.includes(story_points)) {
+              throw new McpError(
+                ErrorCode.InvalidParams,
+                `Story points must be a fibonacci number: ${fibonacciNumbers.join(', ')}`
+              );
+            }
 
-            if (description) command += ` --body "${description}"`;
+            // Use correct command: issue create with proper flags
+            let command = `issue create --project "${project}" --type "${issue_type}" --summary "${summary}" --body "${description}" --no-input`;
+
+            // Add story points (assuming the Jira CLI supports a story points field)
+            command += ` --custom "Story Points=${story_points}"`;
+
+            // Labels are now required, so always add them
+            const labelList = labels.split(',');
+            for (const label of labelList) {
+              command += ` --label "${label.trim()}"`;
+            }
+
+            // Optional fields
             if (assignee) command += ` --assignee "${assignee}"`;
             if (priority) command += ` --priority "${priority}"`;
-            if (labels) {
-              // Labels need to be added individually with -l flag
-              const labelList = labels.split(',');
-              for (const label of labelList) {
-                command += ` --label "${label.trim()}"`;
-              }
-            }
 
             const result = await this.execJira(command);
 
@@ -311,7 +327,7 @@ class JiraMCPServer {
               content: [
                 {
                   type: "text",
-                  text: `Issue Created:\n${result}`,
+                  text: `Issue Created Successfully:\n${result}\n\nFields set:\n- Summary: ${summary}\n- Description: ${description}\n- Story Points: ${story_points}\n- Labels: ${labels}\n- Assignee: ${assignee || 'Unassigned'}\n- Priority: ${priority || 'Default'}`,
                 },
               ],
             };
