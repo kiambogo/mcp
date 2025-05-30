@@ -6,6 +6,7 @@
 |-----|-------------|-------|
 | [Jira](./jira/) | Jira CLI integration | Search issues, create/update issues, add comments, transition status, list projects |
 | [Confluence](./confluence/) | Confluence REST API integration | Search pages, get page content, list spaces, get space info, list pages, get child pages |
+| [Slack](./slack/) | Slack API integration (read-only) | Search messages, read channels/threads, parse permalinks, get user/channel info |
 
 ## Quick Start
 
@@ -18,6 +19,7 @@ make all
 # Build individual MCPs
 make build-jira
 make build-confluence
+make build-slack
 
 # Check dependencies
 make check-deps
@@ -42,8 +44,8 @@ make help
 
 2. **Install Node.js dependencies:**
    ```bash
-   # Install dependencies for both MCPs
-   cd jira && npm install && cd ../confluence && npm install && cd ..
+   # Install dependencies for all MCPs
+   cd jira && npm install && cd ../confluence && npm install && cd ../slack && npm install && cd ..
    ```
 
 ### Jira MCP
@@ -79,6 +81,30 @@ make help
    cd confluence && npm run build
    ```
 
+### Slack MCP
+
+1. **Create a Slack App and get API token:**
+   - Go to [api.slack.com](https://api.slack.com/apps)
+   - Create a new app for your workspace
+   - Add the following OAuth scopes:
+     - `channels:history`, `channels:read`
+     - `groups:history`, `groups:read` (for private channels)
+     - `search:read`, `users:read`
+   - Install the app to your workspace and copy the OAuth token
+
+2. **Store your Slack API token in 1Password:**
+   - Create an item named "Slack API Token"
+   - Store your OAuth token in the password field
+
+3. **Build the MCP server:**
+   ```bash
+   # Using Makefile (recommended)
+   make build-slack
+   
+   # Or manually
+   cd slack && npm run build
+   ```
+
 ## Claude Integration
 
 Add to your Claude MCP configuration file (`claude_desktop_config.json`):
@@ -93,6 +119,10 @@ Add to your Claude MCP configuration file (`claude_desktop_config.json`):
     "confluence": {
       "command": "node", 
       "args": ["/path/to/your/repo/confluence/build/index.js"]
+    },
+    "slack": {
+      "command": "node",
+      "args": ["/path/to/your/repo/slack/build/index.js"]
     }
   }
 }
@@ -117,3 +147,11 @@ Once configured, you can use Claude to:
 - List and explore Confluence spaces
 - Navigate page hierarchies and find child pages
 - Get detailed space information
+
+### Slack MCP
+Once configured, you can use Claude to:
+- Search messages across your Slack workspace
+- Read channel messages and thread discussions
+- Parse and understand Slack permalink URLs
+- Get information about channels and users
+- Research previous conversations on specific topics
